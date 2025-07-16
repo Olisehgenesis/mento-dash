@@ -1,0 +1,147 @@
+{
+  "dashboard": {
+    "name": "Mento Reserve Dashboard",
+    "description": "Comprehensive analysis of Mento's reserve holdings across Celo and Ethereum blockchains",
+    "version": "1.0.0",
+    "author": "Data & Ecosystem Insights Intern",
+    "last_updated": "2025-01-18"
+  },
+  "queries": {
+    "reserve_overview": {
+      "name": "Reserve Overview",
+      "description": "High-level overview of total reserve values across chains",
+      "file": "queries/reserve_overview.sql",
+      "visualization": {
+        "type": "table",
+        "columns": [
+          {"name": "chain", "type": "string", "label": "Blockchain"},
+          {"name": "category", "type": "string", "label": "Category"},
+          {"name": "asset", "type": "string", "label": "Asset"},
+          {"name": "total_balance", "type": "number", "label": "Balance", "format": "number"},
+          {"name": "total_usd_value", "type": "number", "label": "USD Value", "format": "currency"},
+          {"name": "address_count", "type": "number", "label": "Addresses"}
+        ]
+      }
+    },
+    "asset_breakdown": {
+      "name": "Asset Breakdown",
+      "description": "Detailed breakdown of all reserve assets by type and chain",
+      "file": "queries/asset_breakdown.sql",
+      "visualization": {
+        "type": "pie_chart",
+        "dimension": "asset",
+        "metric": "total_usd_value",
+        "color_by": "asset_type"
+      }
+    },
+    "chain_comparison": {
+      "name": "Chain Comparison",
+      "description": "Comparison of reserve holdings across Celo and Ethereum",
+      "file": "queries/chain_comparison.sql",
+      "visualization": {
+        "type": "bar_chart",
+        "dimension": "chain",
+        "metric": "total_value",
+        "secondary_metric": "percentage_of_total"
+      }
+    },
+    "protocol_exposure": {
+      "name": "Protocol Exposure",
+      "description": "Assets held in DeFi protocols for yield generation",
+      "file": "queries/protocol_exposure.sql",
+      "visualization": {
+        "type": "table",
+        "columns": [
+          {"name": "protocol", "type": "string", "label": "Protocol"},
+          {"name": "chain", "type": "string", "label": "Chain"},
+          {"name": "total_protocol_value", "type": "number", "label": "Total Value", "format": "currency"},
+          {"name": "percentage_of_protocols", "type": "number", "label": "% of Protocols", "format": "percentage"},
+          {"name": "asset_count", "type": "number", "label": "Assets"},
+          {"name": "assets", "type": "string", "label": "Asset List"}
+        ]
+      }
+    },
+    "historical_trends": {
+      "name": "Historical Trends",
+      "description": "30-day historical trends of reserve values",
+      "file": "queries/historical_trends.sql",
+      "visualization": {
+        "type": "line_chart",
+        "dimension": "date",
+        "metric": "total_value",
+        "color_by": "chain"
+      }
+    }
+  },
+  "layout": {
+    "sections": [
+      {
+        "name": "Overview",
+        "description": "Key metrics and total reserve values",
+        "queries": ["reserve_overview"],
+        "layout": "full_width"
+      },
+      {
+        "name": "Asset Analysis",
+        "description": "Breakdown of assets by type and chain",
+        "queries": ["asset_breakdown", "chain_comparison"],
+        "layout": "two_column"
+      },
+      {
+        "name": "Protocol Analysis",
+        "description": "DeFi protocol exposure and yield strategies",
+        "queries": ["protocol_exposure"],
+        "layout": "full_width"
+      },
+      {
+        "name": "Historical Analysis",
+        "description": "Trends and changes over time",
+        "queries": ["historical_trends"],
+        "layout": "full_width"
+      }
+    ]
+  },
+  "styling": {
+    "theme": {
+      "primary_color": "#35D07F",
+      "secondary_color": "#FBCC5C",
+      "ethereum_color": "#627EEA",
+      "background_color": "#F8FAFC",
+      "text_color": "#1F2937"
+    },
+    "charts": {
+      "pie_chart": {
+        "colors": ["#35D07F", "#FBCC5C", "#627EEA", "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7"]
+      },
+      "bar_chart": {
+        "colors": ["#35D07F", "#627EEA"]
+      },
+      "line_chart": {
+        "colors": ["#35D07F", "#627EEA", "#FBCC5C"]
+      }
+    }
+  },
+  "metadata": {
+    "data_sources": [
+      "celo.balances",
+      "ethereum.balances", 
+      "prices.usd"
+    ],
+    "reserve_addresses": [
+      "0x9380fA34Fd9e4Fd14c06305fd7B6199089eD4eb9",
+      "0x87647780180b8f55980c7d3ffefe08a9b29e9ae1",
+      "0x13a9803d547332c81Ebc6060F739821264DBcf1E",
+      "0xDA7BFEF937F0944551a24b4C68B054bfA7127570",
+      "0xD3D2e5c5Af667DA817b2D752d86c8f40c22137E1",
+      "0x9d65E69aC940dCB469fd7C46368C1e094250a400",
+      "0xd0697f70E79476195B742d5aFAb14BE50f98CC1E"
+    ],
+    "supported_assets": [
+      "CELO", "ETH", "WBTC", "USDC", "USDT", "WETH", "stETH", "sDAI", "EURC", "axlUSDC", "axlEUROC", "USDGLO", "stEUR"
+    ],
+    "protocols": [
+      "Aave V3",
+      "Uniswap V3"
+    ]
+  }
+} 
