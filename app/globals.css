@@ -5,9 +5,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 30, 41, 59;
+  --background-start-rgb: 231, 227, 212;
+  --background-end-rgb: 231, 227, 212;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,17 +20,25 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: rgb(var(--background-start-rgb));
   font-family: 'Inter', sans-serif;
+  transition: background 0.5s, color 0.5s;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  .animate-spin-slow {
+    animation: spin 2s linear infinite;
+  }
+  .glass {
+    @apply backdrop-blur-md bg-white/70 border border-slate-200 shadow-lg;
+  }
+  .gradient-bg {
+    @apply bg-[#E7E3D4];
+  }
+  .glow {
+    box-shadow: 0 4px 32px 0 rgba(80, 200, 255, 0.08), 0 1.5px 8px 0 rgba(80, 200, 255, 0.05);
   }
 } 

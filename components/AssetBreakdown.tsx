@@ -1,103 +1,61 @@
-import { ReserveData, AssetBalance } from '../types';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import React, { useState } from 'react';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface AssetBreakdownProps {
-  data: ReserveData;
+  tokens: Array<{ symbol: string; balanceUSD: number }>;
 }
 
-export default function AssetBreakdown({ data }: AssetBreakdownProps) {
-  // Aggregate assets by symbol
-  const assetMap = new Map<string, number>();
-  
-  data.assets.forEach(asset => {
-    const currentValue = assetMap.get(asset.symbol) || 0;
-    assetMap.set(asset.symbol, currentValue + asset.usdValue);
-  });
+const COLORS = [
+  '#34d399', '#fbbf24', '#a78bfa', '#38bdf8', '#f472b6', '#f87171', '#10b981', '#facc15', '#818cf8', '#fb7185',
+];
 
-  const chartData = Array.from(assetMap.entries())
-    .map(([symbol, value]) => ({
-      name: symbol,
-      value: Math.round(value),
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 10); // Top 10 assets
-
-  const COLORS = [
-    '#35D07F', '#FBCC5C', '#627EEA', '#FF6B6B', '#4ECDC4',
-    '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'
-  ];
-
-  const formatUSD = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+export default function AssetBreakdown({ tokens }: AssetBreakdownProps) {
+  const [selected, setSelected] = useState<null | { name: string; value: number; percent: number }>(null);
+  const data = tokens.filter(t => t.balanceUSD > 0).map(t => ({ name: t.symbol, value: t.balanceUSD }));
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  const handlePieClick = (_: any, index: number) => {
+    const d = data[index];
+    setSelected({
+      name: d.name,
+      value: d.value,
+      percent: total ? (d.value / total) * 100 : 0,
+    });
   };
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      const percentage = ((data.value / data.total) * 100).toFixed(1);
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{data.name}</p>
-          <p className="text-gray-600">{formatUSD(data.value)}</p>
-          <p className="text-sm text-gray-500">{percentage}% of total</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Asset Breakdown</h2>
-        <p className="text-gray-600">Distribution of reserve assets by value</p>
-      </div>
-
-      <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="mt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Top Assets</h3>
-        <div className="space-y-2">
-          {chartData.slice(0, 5).map((asset, index) => (
-            <div key={asset.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div 
-                  className="w-4 h-4 rounded-full" 
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                ></div>
-                <span className="font-medium text-gray-900">{asset.name}</span>
-              </div>
-              <span className="text-gray-600">{formatUSD(asset.value)}</span>
-            </div>
-          ))}
+    <div className="glass rounded-2xl shadow-lg p-10 flex flex-col items-center hover:scale-[1.02] transition-transform duration-200">
+      <h2 className="text-2xl font-bold mb-6 text-slate-800">Reserve Breakdown by Asset</h2>
+      <ResponsiveContainer width="100%" height={360}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={130}
+            label={({ name }) => name}
+            stroke="#334155"
+            strokeWidth={2}
+            onClick={handlePieClick}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} cursor="pointer" />
+            ))}
+          </Pie>
+          <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: 8, color: '#222' }} formatter={(value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+          <Legend wrapperStyle={{ color: '#222' }} />
+        </PieChart>
+      </ResponsiveContainer>
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setSelected(null)}>
+          <div className="rounded-3xl p-10 min-w-[320px] max-w-[90vw] shadow-2xl flex flex-col items-center relative" style={{ background: '#E7E3D4' }} onClick={e => e.stopPropagation()}>
+            <button className="absolute top-4 right-4 text-2xl text-slate-500 hover:text-slate-800" onClick={() => setSelected(null)}>&times;</button>
+            <h3 className="text-2xl font-bold mb-2 text-slate-800">{selected.name}</h3>
+            <div className="text-3xl font-extrabold text-slate-700 mb-1">${selected.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className="text-base text-slate-600">{selected.percent.toFixed(1)}% of reserve</div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 } 

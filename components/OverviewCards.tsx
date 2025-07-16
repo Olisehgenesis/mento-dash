@@ -1,77 +1,54 @@
-import { ReserveData } from '../types';
-import { DollarSign, TrendingUp, Shield, Globe } from 'lucide-react';
+import React from 'react';
+import { TrendingUp, Layers, Globe } from 'lucide-react';
 
 interface OverviewCardsProps {
-  data: ReserveData;
+  summary: {
+    totalTokens: number;
+    totalApps: number;
+    totalNFTs: number;
+    grandTotal: number;
+    assetsList: string[];
+  };
+  chainBreakdown: Array<{ chain: string; value: number }>;
+  assetCount: number;
 }
 
-export default function OverviewCards({ data }: OverviewCardsProps) {
-  const formatUSD = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const cards = [
-    {
-      title: 'Total Reserve Value',
-      value: formatUSD(data.totalUsdValue),
-      icon: DollarSign,
-      color: 'bg-gradient-to-br from-green-500 to-green-600',
-      change: '+2.5%',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Celo Chain',
-      value: formatUSD(data.celoUsdValue),
-      icon: Shield,
-      color: 'bg-gradient-to-br from-celo-primary to-celo-secondary',
-      change: '+1.8%',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Ethereum Chain',
-      value: formatUSD(data.ethereumUsdValue),
-      icon: Globe,
-      color: 'bg-gradient-to-br from-ethereum-primary to-blue-600',
-      change: '+3.2%',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Assets Count',
-      value: data.assets.length.toString(),
-      icon: TrendingUp,
-      color: 'bg-gradient-to-br from-purple-500 to-purple-600',
-      change: '+2',
-      changeType: 'neutral' as const,
-    },
-  ];
-
+export default function OverviewCards({ summary, chainBreakdown, assetCount }: OverviewCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {cards.map((card, index) => {
-        const Icon = card.icon;
-        return (
-          <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 ${card.color} rounded-lg flex items-center justify-center`}>
-                <Icon className="w-6 h-6 text-white" />
-              </div>
-              <div className={`text-sm font-medium ${
-                card.changeType === 'positive' ? 'text-green-600' : 
-                card.changeType === 'negative' ? 'text-red-600' : 'text-gray-600'
-              }`}>
-                {card.change}
-              </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-14 mb-16">
+      <div className="glass rounded-3xl p-16 flex flex-col items-center shadow-2xl hover:scale-[1.04] transition-transform duration-200 min-h-[320px] min-w-[320px]">
+        <div className="flex items-center space-x-5 mb-2">
+          <TrendingUp className="w-16 h-16 text-emerald-500" />
+          <span className="text-slate-500 text-lg font-semibold">Total Reserve Value</span>
+        </div>
+        <div className="text-5xl font-extrabold text-slate-800">${summary.grandTotal?.toLocaleString(undefined, { maximumFractionDigits: 0 }) ?? '--'}</div>
+      </div>
+      <div className="glass rounded-3xl p-16 flex flex-col items-center shadow-2xl hover:scale-[1.04] transition-transform duration-200 min-h-[320px] min-w-[320px]">
+        <div className="flex items-center space-x-5 mb-2">
+          <Layers className="w-16 h-16 text-orange-400" />
+          <span className="text-slate-500 text-lg font-semibold">Assets Tracked</span>
+        </div>
+        <div className="text-5xl font-extrabold text-slate-800 mb-2">{assetCount}</div>
+        <div className="flex flex-wrap justify-center gap-2 mt-2 max-w-xs">
+          {(summary.assetsList || []).map((symbol: string, i: number) => (
+            <span key={symbol} className={`px-3 py-1 rounded-full text-xs font-semibold ${['bg-emerald-100 text-emerald-700','bg-orange-100 text-orange-700','bg-purple-100 text-purple-700','bg-teal-100 text-teal-700','bg-pink-100 text-pink-700','bg-blue-100 text-blue-700','bg-yellow-100 text-yellow-700','bg-gray-100 text-gray-700'][i % 8]}`}>{symbol}</span>
+          ))}
+        </div>
+      </div>
+      <div className="glass rounded-3xl p-16 flex flex-col items-center shadow-2xl hover:scale-[1.04] transition-transform duration-200 min-h-[320px] min-w-[320px]">
+        <div className="flex items-center space-x-5 mb-2">
+          <Globe className="w-16 h-16 text-purple-400" />
+          <span className="text-slate-500 text-lg font-semibold">By Chain</span>
+        </div>
+        <div className="flex flex-col items-center gap-2 mt-2">
+          {chainBreakdown.map((c) => (
+            <div key={c.chain} className="flex items-center gap-2 text-base font-semibold text-slate-700">
+              <span className={`px-2 py-1 rounded-full text-xs font-bold ${c.chain.toLowerCase().includes('eth') ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>{c.chain}</span>
+              <span className="text-slate-500 text-sm">${c.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">{card.title}</h3>
-            <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-          </div>
-        );
-      })}
+          ))}
+        </div>
+      </div>
     </div>
   );
 } 

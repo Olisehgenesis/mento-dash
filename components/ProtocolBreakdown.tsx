@@ -1,181 +1,75 @@
-import { useState, useEffect } from 'react';
-import { ReserveDataService } from '../services/reserveData';
-import { AssetBalance } from '../types';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import React from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
 
-export default function ProtocolBreakdown() {
-  const [protocolData, setProtocolData] = useState<{ protocol: string; usdValue: number; assets: AssetBalance[] }[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface Protocol {
+  name: string;
+  category: string;
+  network: string;
+  totalValue: number;
+  positionCount: number;
+}
 
-  useEffect(() => {
-    const fetchProtocolData = async () => {
-      try {
-        setLoading(true);
-        const service = ReserveDataService.getInstance();
-        const data = await service.getProtocolBreakdown();
-        setProtocolData(data);
-      } catch (error) {
-        console.error('Error fetching protocol data:', error);
-        setError('Failed to fetch protocol data from Dune Analytics');
-      } finally {
-        setLoading(false);
-      }
-    };
+interface ProtocolBreakdownProps {
+  protocols: Protocol[];
+}
 
-    fetchProtocolData();
-  }, []);
+export default function ProtocolBreakdown({ protocols }: ProtocolBreakdownProps) {
+  // No filtering: show all protocols, even those with small values
+  const data = protocols.map(p => ({ name: p.name, value: p.totalValue }));
 
-  const chartData = protocolData.map(item => ({
-    name: item.protocol,
-    value: Math.round(item.usdValue),
-  }));
-
-  const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
-
-  const formatUSD = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{data.name}</p>
-          <p className="text-gray-600">{formatUSD(data.value)}</p>
-        </div>
-      );
+  // Helper for category badge color
+  const badgeColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'lending': return 'bg-teal-200 text-teal-800';
+      case 'dex': return 'bg-orange-200 text-orange-800';
+      case 'staking': return 'bg-purple-200 text-purple-800';
+      default: return 'bg-slate-200 text-slate-800';
     }
-    return null;
   };
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-celo-primary"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Protocol Breakdown</h2>
-          <p className="text-gray-600">Assets held in DeFi protocols</p>
-        </div>
-        <div className="text-center py-12">
-          <div className="text-red-500 mb-2">
-            <svg className="mx-auto h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <p className="text-gray-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (protocolData.length === 0) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Protocol Breakdown</h2>
-          <p className="text-gray-600">Assets held in DeFi protocols</p>
-        </div>
-        <div className="text-center py-12">
-          <p className="text-gray-500">No protocol data available from Dune Analytics</p>
-        </div>
-      </div>
-    );
-  }
-
-  const totalProtocolValue = protocolData.reduce((sum, protocol) => sum + protocol.usdValue, 0);
+  const rowBorderColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'lending': return 'border-l-4 border-teal-400';
+      case 'dex': return 'border-l-4 border-orange-400';
+      case 'staking': return 'border-l-4 border-purple-400';
+      default: return 'border-l-4 border-slate-300';
+    }
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Protocol Breakdown</h2>
-        <p className="text-gray-600">Assets held in DeFi protocols for yield generation</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Protocol Details</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Total value in protocols: {formatUSD(totalProtocolValue)}
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {protocolData.map((protocol, index) => (
-              <div key={protocol.protocol} className="p-4 border border-gray-200 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                    ></div>
-                    <h4 className="font-semibold text-gray-900">{protocol.protocol}</h4>
-                  </div>
-                  <span className="text-lg font-bold text-gray-900">
-                    {formatUSD(protocol.usdValue)}
-                  </span>
-                </div>
-                
-                <div className="space-y-2">
-                  {protocol.assets.map((asset) => (
-                    <div key={`${protocol.protocol}-${asset.symbol}`} className="flex justify-between text-sm">
-                      <span className="text-gray-600">{asset.symbol}</span>
-                      <span className="text-gray-900">{formatUSD(asset.usdValue)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+    <div className="glass rounded-2xl shadow-lg p-10 mt-12 flex flex-col items-center hover:scale-[1.01] transition-transform duration-200">
+      <h2 className="text-2xl font-bold mb-6 text-slate-800">Reserve by Protocol</h2>
+      <ResponsiveContainer width="100%" height={360}>
+        <BarChart data={data} layout="vertical">
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis type="number" tickFormatter={v => `$${v / 1e6}M`} stroke="#222" tick={{ fill: '#222', fontSize: 18 }} />
+          <YAxis dataKey="name" type="category" width={160} stroke="#222" tick={{ fill: '#222', fontSize: 18 }} />
+          <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: 8, color: '#222' }} formatter={(value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+          <Legend wrapperStyle={{ color: '#222', fontSize: 18 }} />
+          <Bar dataKey="value" fill="#14b8a6" name="USD Value" barSize={48} />
+        </BarChart>
+      </ResponsiveContainer>
+      <div className="mt-10 w-full overflow-x-auto">
+        <table className="min-w-full text-lg text-left rounded-xl overflow-hidden bg-white/90">
+          <thead>
+            <tr>
+              <th className="px-5 py-4 text-slate-600">Protocol</th>
+              <th className="px-5 py-4 text-slate-600">Category</th>
+              <th className="px-5 py-4 text-slate-600">Network</th>
+              <th className="px-5 py-4 text-slate-600">Value (USD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {protocols.map((p) => (
+              <tr key={p.name} className={`border-t border-slate-200 hover:bg-slate-100 transition-colors ${rowBorderColor(p.category)}`}>
+                <td className="px-5 py-4 font-semibold text-slate-800">{p.name}</td>
+                <td className={`px-5 py-4`}><span className={`px-3 py-2 rounded-full text-base font-semibold ${badgeColor(p.category)}`}>{p.category}</span></td>
+                <td className="px-5 py-4 text-blue-700 font-medium">{p.network}</td>
+                <td className="px-5 py-4 text-slate-700 font-semibold">${p.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+              </tr>
             ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h3 className="font-semibold text-blue-900 mb-2">Protocol Strategy</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Aave: Lending and borrowing for yield generation</li>
-          <li>• Uniswap V3: Liquidity provision for trading fees</li>
-          <li>• Diversified protocol exposure reduces smart contract risk</li>
-        </ul>
+          </tbody>
+        </table>
       </div>
     </div>
   );
