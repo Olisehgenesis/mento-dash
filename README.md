@@ -58,15 +58,30 @@ npm run build
 npm start
 ```
 
-## 🏗️ Architecture
+## 🛠️ API Keys & Environment Variables
 
-### Tech Stack
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Charts**: Recharts
-- **Icons**: Lucide React
-- **Data Fetching**: Axios
+This app uses the Zapper API to fetch real-time reserve data.
+
+1. **Local Development:**
+   - Create a `.env.local` file in your project root:
+     ```
+     NEXT_PUBLIC_ZAPPER_API_KEY=your_zapper_api_key_here
+     ```
+   - Restart your dev server after adding the key.
+
+2. **Vercel Deployment:**
+   - Go to your project settings in Vercel.
+   - Add the environment variable:
+     - Name: `NEXT_PUBLIC_ZAPPER_API_KEY`
+     - Value: your Zapper API key
+   - Redeploy your project after saving.
+
+## 🏗️ Architecture (Updated)
+
+- **Data Source:** Zapper API (for reserve, protocol, and asset data)
+- **API Key:** Required for all data fetching (see above)
+- **Frontend:** Next.js 14, React 18, Tailwind CSS
+- **Charts:** Recharts
 
 ### Project Structure
 ```
@@ -90,15 +105,10 @@ npm start
 └── public/                # Static assets
 ```
 
-## 📊 Data Sources
+## 📊 Data Sources (Updated)
 
-### Current Implementation
-The dashboard currently uses mock data to demonstrate the visualization capabilities. In a production environment, it would integrate with:
-
-- **Celo RPC**: For on-chain balance queries
-- **Ethereum RPC**: For Ethereum-based asset balances
-- **CoinGecko API**: For real-time price data
-- **DeFi Protocol APIs**: For yield and protocol-specific data
+- **Zapper API:** Used for all reserve, asset, and protocol data
+- **Celo/Ethereum Addresses:** Queried via Zapper
 
 ### Reserve Addresses
 The dashboard tracks assets across multiple reserve addresses:
